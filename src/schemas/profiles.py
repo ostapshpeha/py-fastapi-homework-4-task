@@ -2,6 +2,7 @@ from datetime import date
 
 from fastapi import UploadFile, Form, File, HTTPException
 from pydantic import BaseModel, field_validator, HttpUrl
+from pydantic_core.core_schema import ValidationInfo
 
 from validation import (
     validate_name,
@@ -40,7 +41,7 @@ class ProfileCreateSchema(BaseModel):
 
     @field_validator("first_name", "last_name")
     @classmethod
-    def validate_name_field(cls, name: str) -> str:
+    def validate_name_field(cls, name: str, info: ValidationInfo) -> str:
         try:
             validate_name(name)
             return name.lower()
@@ -49,7 +50,7 @@ class ProfileCreateSchema(BaseModel):
                 status_code=422,
                 detail=[{
                     "type": "value_error",
-                    "loc": ["first_name" if "first_name" in name else "last_name"],
+                    "loc": ["body", info.field_name],
                     "msg": str(e),
                     "input": name
                 }]
